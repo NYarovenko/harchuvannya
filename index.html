@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Харчування для матусі</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#142A20;
+    --bg-soft:#1C3A2C;
+    --bg-soft-2:#234633;
+    --paper:#FBF1DE;
+    --paper-edge:#EEDDB8;
+    --ink:#20271D;
+    --ink-soft:#5C6553;
+    --honey:#E3A22B;
+    --honey-soft:#F2D49B;
+    --paprika:#C9523F;
+    --paprika-soft:#E9C2B8;
+    --sage:#7E9C6B;
+    --line:rgba(32,39,29,0.13);
+    --line-light:rgba(251,241,222,0.14);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--paper);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    position:fixed;inset:0;
+    display:flex;
+    flex-direction:column;
+    max-width:560px;
+    margin:0 auto;
+    background:
+      radial-gradient(900px 500px at 15% -10%, var(--bg-soft-2), transparent 60%),
+      var(--bg);
+  }
+  .screen{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    opacity:1;
+    transition:opacity .35s ease;
+  }
+  .screen.hidden{opacity:0;pointer-events:none;}
+  button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:600;
+  }
+
+  /* ---------- COVER ---------- */
+  #cover{
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:32px 28px 40px;
+    position:relative;
+  }
+  .leaf-art{width:128px;height:128px;margin-bottom:18px;}
+  .cover-eyebrow{color:var(--sage);margin-bottom:14px;}
+  .cover-title{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:44px;
+    line-height:1.04;
+    letter-spacing:-.01em;
+    color:var(--paper);
+    margin:0 0 14px;
+  }
+  .cover-title em{
+    font-style:italic;
+    font-weight:300;
+    color:var(--honey);
+  }
+  .cover-sub{
+    font-size:16px;
+    line-height:1.5;
+    color:rgba(251,241,222,.72);
+    max-width:320px;
+    margin:0 auto 30px;
+  }
+  .cover-emoji-row{
+    font-size:22px;
+    letter-spacing:6px;
+    margin:0 0 26px;
+    opacity:.85;
+  }
+  .cover-meta{
+    display:flex;gap:18px;align-items:center;justify-content:center;
+    margin-bottom:34px;
+  }
+  .cover-meta .dot{width:4px;height:4px;border-radius:50%;background:rgba(251,241,222,.35);}
+  .cover-meta span{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;color:rgba(251,241,222,.55);}
+  .btn-primary{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:17px;
+    color:var(--ink);
+    background:var(--honey);
+    padding:16px 34px;
+    border-radius:100px;
+    box-shadow:0 10px 24px -8px rgba(227,162,43,.55);
+    letter-spacing:.01em;
+  }
+  .btn-primary:active{transform:scale(.97);}
+  .cover-footer{
+    position:absolute;
+    bottom:22px;left:0;right:0;
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.05em;
+    color:rgba(251,241,222,.4);
+  }
+
+  /* ---------- CARD VIEW ---------- */
+  #card-view{display:flex;}
+  .topbar{
+    flex:0 0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 18px 14px;
+  }
+  .icon-btn{
+    width:38px;height:38px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--bg-soft);
+    color:var(--paper);
+  }
+  .icon-btn:active{background:var(--bg-soft-2);}
+  .topbar-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .topbar-center .eyebrow{color:rgba(251,241,222,.5);}
+  .day-tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;font-weight:600;letter-spacing:.04em;
+    color:var(--ink);
+    background:var(--paprika-soft);
+    padding:3px 10px;
+    border-radius:100px;
+    color:#7A2C1F;
+  }
+
+  .stage{
+    flex:1 1 auto;
+    position:relative;
+    padding:0 16px 26px;
+    overflow:hidden;
+  }
+  .deck{
+    position:relative;
+    height:100%;
+    touch-action:pan-y;
+  }
+  .card{
+    position:absolute;inset:0;
+    background:var(--paper);
+    border-radius:26px;
+    border:1px solid var(--paper-edge);
+    box-shadow:0 24px 50px -20px rgba(0,0,0,.45);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:0 22px 26px;
+  }
+  .card-daynum{
+    font-family:'Fraunces',serif;
+    font-weight:300;
+    font-size:104px;
+    line-height:1;
+    color:var(--ink);
+    opacity:.92;
+    margin:-6px 0 0 -4px;
+    letter-spacing:-.02em;
+  }
+  .card-daynum .slash{color:var(--paper-edge);font-weight:300;}
+  .card-special{
+    margin-top:-8px;
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:17px;
+    color:var(--paprika);
+  }
+  .card-note{
+    margin-top:10px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    background:rgba(201,82,63,.08);
+    border-left:3px solid var(--paprika);
+    padding:9px 12px;
+    border-radius:6px;
+    line-height:1.5;
+  }
+  .meal{margin-top:22px;}
+  .meal:first-of-type{margin-top:18px;}
+  .meal-head{
+    display:flex;align-items:baseline;gap:10px;
+    margin-bottom:10px;
+  }
+  .meal-idx{
+    font-size:15px;
+    background:var(--honey-soft);
+    width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex:0 0 auto;
+    line-height:1;
+  }
+  .item-icon{
+    display:inline-block;
+    margin-right:5px;
+  }
+  .meal-name{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:18px;
+    color:var(--ink);
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .meal-items{list-style:none;margin:0;padding:0;}
+  .meal-items li{
+    position:relative;
+    padding-left:16px;
+    margin-bottom:8px;
+    font-size:14.5px;
+    line-height:1.5;
+    color:var(--ink);
+  }
+  .meal-items li::before{
+    content:'';
+    position:absolute;left:0;top:8px;
+    width:6px;height:6px;border-radius:50%;
+    background:var(--sage);
+  }
+  .qty{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    color:#8a5a16;
+    background:rgba(227,162,43,.16);
+    padding:0 4px;
+    border-radius:4px;
+    font-size:13px;
+  }
+  .card-divider{height:1px;background:var(--line);margin:22px 0 0;}
+
+  /* ---------- DAY GRID OVERLAY ---------- */
+  #day-sheet{
+    position:absolute;inset:0;
+    background:rgba(10,18,13,.6);
+    backdrop-filter:blur(2px);
+    display:flex;align-items:flex-end;
+    z-index:20;
+    transition:opacity .25s ease;
+  }
+  #day-sheet.hidden{opacity:0;pointer-events:none;}
+  .sheet-panel{
+    width:100%;
+    background:var(--bg-soft);
+    border-radius:26px 26px 0 0;
+    padding:18px 18px 30px;
+    max-height:78%;
+    overflow-y:auto;
+    transform:translateY(0);
+    transition:transform .3s ease;
+  }
+  #day-sheet.hidden .sheet-panel{transform:translateY(30px);}
+  .sheet-handle{
+    width:36px;height:4px;border-radius:4px;
+    background:rgba(251,241,222,.25);
+    margin:0 auto 16px;
+  }
+  .sheet-title{
+    font-family:'Fraunces',serif;font-weight:600;font-size:19px;
+    margin:0 0 4px;color:var(--paper);
+  }
+  .sheet-sub{
+    font-size:12.5px;color:rgba(251,241,222,.5);margin:0 0 16px;
+  }
+  .day-grid{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:9px;
+  }
+  .day-tile{
+    aspect-ratio:1;
+    border-radius:12px;
+    background:var(--bg-soft-2);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;font-size:14px;
+    color:rgba(251,241,222,.75);
+    border:1px solid transparent;
+  }
+  .day-tile.active{
+    background:var(--honey);color:var(--ink);
+    box-shadow:0 6px 14px -4px rgba(227,162,43,.6);
+  }
+  .day-tile.special{border-color:var(--paprika);color:var(--paprika-soft);}
+  .day-tile:active{transform:scale(.93);}
+  .legend{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:rgba(251,241,222,.55);}
+  .legend-dot{width:9px;height:9px;border-radius:3px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ COVER ============ -->
+  <section id="cover" class="screen">
+    <svg class="leaf-art" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="60" cy="60" r="58" stroke="#7E9C6B" stroke-opacity=".35" stroke-width="1.5"/>
+      <path d="M60 96C60 96 32 84 32 56C32 38 46 26 60 26C74 26 88 38 88 56C88 84 60 96 60 96Z" stroke="#F2D49B" stroke-width="2"/>
+      <path d="M60 26V90" stroke="#E3A22B" stroke-width="2" stroke-linecap="round"/>
+      <path d="M60 40C68 44 74 50 74 58" stroke="#E3A22B" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>
+      <path d="M60 50C52 54 46 60 46 68" stroke="#E3A22B" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>
+      <path d="M60 65C68 68 72 73 72 79" stroke="#E3A22B" stroke-width="1.4" stroke-linecap="round" opacity=".5"/>
+    </svg>
+    <div class="cover-eyebrow eyebrow">30-денний план</div>
+    <h1 class="cover-title">Харчування<br>для <em>матусі</em></h1>
+    <p class="cover-sub">Сніданок, обід і вечеря — на кожен день, у формі зручних карток. Гортай день за днем.</p>
+    <div class="cover-emoji-row" aria-hidden="true">🥗 🍳 🥑 🍋 🥒 🥝</div>
+    <div class="cover-meta">
+      <span id="cover-meta-text">30 днів · 90 прийомів їжі</span>
+    </div>
+    <button class="btn-primary" id="cover-start">Почати з дня 1</button>
+    <div class="cover-footer">зроблено з турботою 💛</div>
+  </section>
+
+  <!-- ============ CARD VIEW ============ -->
+  <section id="card-view" class="screen hidden">
+    <div class="topbar">
+      <button class="icon-btn" id="btn-home" aria-label="На обкладинку">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 11.5L12 4l8 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="topbar-center">
+        <div class="eyebrow" id="top-eyebrow">ДЕНЬ 1 / 30</div>
+        <div class="day-tag" id="top-tag" style="display:none;"></div>
+      </div>
+      <button class="icon-btn" id="btn-grid" aria-label="Усі дні">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+    </div>
+
+    <div class="stage">
+      <div class="deck" id="deck"></div>
+    </div>
+
+  </section>
+
+  <!-- ============ DAY GRID SHEET ============ -->
+  <div id="day-sheet" class="hidden">
+    <div class="sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Усі дні</div>
+      <div class="sheet-sub">Обери день, щоб перейти одразу до нього</div>
+      <div class="day-grid" id="day-grid"></div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--bg-soft-2)"></span>звичайний день</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--paprika)"></span>особливий день</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--honey)"></span>поточний</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   ДАНІ: 30 днів харчування
+   ============================================================ */
+const DAYS = [
+{day:1, meals:[
+  {label:'Завтрак', items:['овсянка 30 г + яйцо 1 шт.','салат (огурец + капуста + оливковое масло 1 ст. л.)','фрукт до 300 г']},
+  {label:'Обед', items:['гречка или булгур 30 г + яичные белки 2 шт.','куриное бедро без кожи 100 г','салат (капуста 100 г + морковь 100 г + лимонный сок + оливковое масло 1 ст. л.)']},
+  {label:'Ужин', items:['фрукт среднего размера','киви 1 шт.','ряженка 250 мл']}
+]},
+{day:2, meals:[
+  {label:'Завтрак', items:['яйца 2 шт. + хлеб 50 г + банан']},
+  {label:'Обед', items:['макароны твёрдых сортов 30 г + сыр 40% 30 г','курага 50 г']},
+  {label:'Ужин', items:['рис 30 г + овощной салат 200 г','киви 1 шт.','нежирный йогурт 200 мл']}
+]},
+{day:3, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','рыба из списка 150 г','салат (капуста 120 г + огурец 100 г + укроп 15 г + петрушка 15 г + зелёный лук 20 г + уксус 5 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 170 г','салат (огурец 100 г + капуста 100 г + укроп 15 г + петрушка 15 г + зелёный лук 20 г + уксус 5 мл)','Cola Zero 0,33']},
+  {label:'Ужин', items:['рыба из списка 150 г + огурец','киви 1 шт.','кефир 250 мл']}
+]},
+{day:4, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','белая рыба из списка 100 г','салат (шампиньоны 100 г + листья салата 50 г + огурец 100 г + укроп 15 г + петрушка 15 г + соевый соус 10 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 180 г + огурец 150 г','Cola Zero 0,33']},
+  {label:'Ужин', items:['креветки или рыба из списка 200 г + огурец','киви 1 шт.','кефир 250 мл']}
+]},
+{day:5, meals:[
+  {label:'Завтрак', items:['рисовые хлебцы 2 шт. + яйца 2 шт. + сыр 50 г']},
+  {label:'Обед', items:['куриное бедро без кожи 100 г + картофель в мундире 120 г + зелень 100 г','апельсин, мандарин или яблоко']},
+  {label:'Ужин', items:['овощной салат 200 г + рис 30 г + куриное бедро без кожи 100 г','грейпфрут','киви 1 шт.']}
+]},
+{day:6, meals:[
+  {label:'Завтрак', items:['овсянка 35 г + яблоко','кофе с молоком 50 г','орехи или семечки тыквы 15 г']},
+  {label:'Обед', items:['яичные белки 2 шт.','куриное бедро без кожи 100 г','салат 200 г + лимонный сок + оливковое масло 2 ст. л.']},
+  {label:'Ужин', items:['банан','киви 1 шт.','ряженка 250 мл']}
+]},
+{day:7, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','рыба из списка 100 г','салат (огурец 100 г + болгарский перец 100 г + укроп 15 г + петрушка 15 г + зелёный лук 20 г + лимонный сок 5 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 200 г + огурец или капуста 150 г','Cola Zero 0,33']},
+  {label:'Ужин', items:['креветки или рыба из списка 200 г + огурец','киви 1 шт.','кефир 250 мл']}
+]},
+{day:8, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','белая рыба из списка 100 г','салат (брокколи 120 г + огурец 100 г + укроп 15 г + петрушка 15 г + лимонный сок 5 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 180 г + огурец 150 г','Cola Zero 0,33']},
+  {label:'Ужин', items:['креветки или рыба из списка 200 г + огурец','киви 1 шт.','кефир 250 мл']}
+]},
+{day:9, meals:[
+  {label:'Завтрак', items:['лаваш 80 г + сыр сулугуни 30 г + зелень + красная рыба слабосолёная 70 г']},
+  {label:'Обед', items:['творог 5% 100 г + мёд 2 ч. л.','яичные белки 2 шт. + грибы маринованные 100 г','бедро индейки без кожи 100 г + салат овощной 200 г с лимонным соком']},
+  {label:'Ужин', items:['ананас или банан 200 г','киви 1 шт.','кефир 250 мл']}
+]},
+{day:10, meals:[
+  {label:'Завтрак', items:['авокадо 100 г + чёрный хлеб 50 г','мороженое пломбир до 80 г']},
+  {label:'Обед', items:['макароны твёрдых сортов 30 г + сыр 40% 30 г + помидор + болгарский перец']},
+  {label:'Ужин', items:['нежирный йогурт 100 мл + яблоко 100 г','рис 30 г + овощной салат 200 г','киви 1 шт.']}
+]},
+{day:11, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','рыба из списка 100 г','салат (брокколи 120 г + огурец 100 г + укроп 15 г + петрушка 15 г + лимонный сок 5 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 100 г','салат (пекинская капуста 120 г + огурец 100 г + укроп 15 г + соевый соус 10 мл) + креветки или кальмары 150 г','Cola Zero 0,33']},
+  {label:'Ужин', items:['рыба из списка или куриное бедро без кожи 120 г','салат (морковь + капуста + лимонный сок) 100 г','киви 1 шт.','кефир 200 мл']}
+]},
+{day:12, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','рыба из списка 100 г','салат (вешенки 100 г + капуста 100 г + укроп 15 г + петрушка 15 г + чеснок + соевый соус 10 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 100 г','овощной салат (огурец, капуста, зелёный лук, уксус) 200 г + креветки или кальмары 150 г','Cola Zero 0,33']},
+  {label:'Ужин', items:['рыба из списка или куриное бедро без кожи 120 г','салат (морковь + капуста + лимонный сок) 100 г','киви 1 шт.','кефир 200 мл']}
+]},
+{day:13, meals:[
+  {label:'Завтрак', items:['хлебец цельнозерновой 40 г + яйцо варёное 1 шт. + авокадо 50 г','груша 250 г']},
+  {label:'Обед', items:['бедро индейки без кожи 120 г + киноа 50 г + брокколи 150 г']},
+  {label:'Ужин', items:['кефир 1% 300 мл','салат (морковь 50 г, капуста 100 г, лимонный сок 10 мл) + орехи 20 г + банан 30 г','киви 1 шт.']}
+]},
+{day:14, meals:[
+  {label:'Завтрак', items:['хлебец цельнозерновой 40 г + яйцо варёное 1 шт. + авокадо 40 г','груша 250 г']},
+  {label:'Обед', items:['бедро индейки без кожи 100 г + киноа 35 г + брокколи 150 г']},
+  {label:'Ужин', items:['кефир 1% 200 мл','салат (морковь 50 г, капуста 100 г, лимонный сок 10 мл) + орехи 20 г + банан 30 г','киви 1 шт.']}
+]},
+{day:15, tag:'🌾 Разгрузочный', meals:[
+  {label:'Завтрак', items:['гречка 40 г','яичные белки 3 шт.','огурец 150 г']},
+  {label:'Обед', items:['гречка 30 г','салат (капуста 150 г + огурец 100 г + укроп 15 г + петрушка 15 г + лимонный сок)']},
+  {label:'Ужин', items:['яичные белки 4 шт.','кефир 1% 400 мл','зелень 50 г','киви 1 шт.']}
+]},
+{day:16, meals:[
+  {label:'Завтрак', items:['булгур 80 г + яйцо 1 шт. + овощи 100 г','чёрный шоколад 20 г + кофе с молоком 50 г']},
+  {label:'Обед', items:['овощной салат 200 г + куриное бедро без кожи 130 г']},
+  {label:'Ужин', items:['авокадо 100 г + хлебцы 30 г','роллы «Филадельфия» 200 г + сухое вино 150 мл','киви 1 шт.']}
+]},
+{day:17, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','белая рыба из списка 100 г','салат (шампиньоны 100 г + листья салата 50 г + огурец 100 г + укроп 15 г + петрушка 15 г + соевый соус 10 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 180 г + огурец 150 г','Cola Zero 0,33']},
+  {label:'Ужин', items:['креветки или рыба из списка 200 г + огурец','киви 1 шт.','кефир 250 мл']}
+]},
+{day:18, meals:[
+  {label:'Завтрак', items:['рис 40 г + мидии (приготовленные без масла) 70 г или бедро куриное без кожи 80 г + болгарский перец 50 г']},
+  {label:'Обед', items:['макароны твердых сортов 35 г + 2 яичных белка + салат (огурец 100 г, редис 100 г, укроп и петрушка 20 г, лимонный сок)']},
+  {label:'Ужин', items:['цельнозерновые хлебцы 30 г с сыром 30 г','куриное бедро без кожи 120 г + салат 200 г с лимонным соком и оливковым маслом (1 ст. ложка)']}
+]},
+{day:19, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','рыба из списка 150 г','салат (капуста 120 г + огурец 100 г + укроп 15 г + петрушка 15 г + зелёный лук 20 г + уксус 5 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 170 г','салат (огурец 100 г + капуста 100 г + укроп 15 г + петрушка 15 г + зелёный лук 20 г + уксус 5 мл)','Cola Zero 0,33']},
+  {label:'Ужин', items:['рыба из списка 150 г + огурец','киви 1 шт.','кефир 250 мл']}
+]},
+{day:20, meals:[
+  {label:'Завтрак', items:['хлеб 50 г + яйцо 1 шт + огурец','кофе с молоком 30 г','твёрдый сыр 35 г']},
+  {label:'Обед', items:['рыба из списка 150 г + чашка кофе (или чая) + 1–2 ч. л. мёда или сахара','макароны твёрдых сортов 30 г + яичные белки 2 шт + салат (огурец 100 г, редис 100 г, укроп и петрушка 20 г, лимонный сок)']},
+  {label:'Ужин', items:['куриное бедро без кожи 100 г + салат 200 г (с подсолнечным маслом 1 ст. л.)','фасоль белая 50 г (можно в томате) + яблоко 150 г']}
+]},
+{day:21, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт.','рыба из списка 100 г','салат (огурец 100 г + болгарский перец 100 г + укроп 15 г + петрушка 15 г + зелёный лук 20 г + лимонный сок 5 мл)']},
+  {label:'Обед', items:['куриное бедро без кожи 200 г + огурец или капуста 150 г','Cola Zero 0,33']},
+  {label:'Ужин', items:['креветки или рыба из списка 200 г + огурец','киви 1 шт.','кефир 250 мл']}
+]},
+{day:22, meals:[
+  {label:'Завтрак', items:['Овощной салат 250 г + рис 40 г + филе индейки 150 г']},
+  {label:'Обед', items:['Куриное бедро без кожи 100 г + картофель в мундире 170 г + квашеная капуста 50 г + гранат 180 г']},
+  {label:'Ужин', items:['Салат (огурцы 100 г, помидоры 50 г, сыр фета 30 г, оливковое масло 10 г) + апельсины 250 г']}
+]},
+{day:23, meals:[
+  {label:'Завтрак', items:['Овощной салат 250 г + гречка 40 г + филе индейки 150 г']},
+  {label:'Обед', items:['Куриное бедро без кожи 100 г + картофель в мундире 170 г + квашеная капуста 50 г + гранат 180 г']},
+  {label:'Ужин', items:['Салат (огурцы 100 г, помидоры 50 г, сыр фета 30 г, оливковое масло 10 г) + киви 2 шт.']}
+]},
+{day:24, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт + куриное бедро без кожи 100 г + салат (морковь 100 г, капуста 100 г, лимонный сок 10 мл)']},
+  {label:'Обед', items:['рыба из списка 150 г + кабачок 200 г + шампиньоны 150 г + соевый соус 10 мл']},
+  {label:'Ужин', items:['овощной салат (огурец 100 г, капуста 100 г, зелёный лук 20 г, уксус 5 мл) + креветки или кальмары 200 г + яйцо 1 шт + Cola Zero 150 мл']}
+]},
+{day:25, meals:[
+  {label:'Завтрак', items:['яичные белки 3 шт + куриное бедро без кожи 100 г + салат (пекинская капуста 100 г, огурец 100 г, редис 50 г, зелень 20 г, лимонный сок 10 мл)']},
+  {label:'Обед', items:['рыба из списка 150 г + кабачок 200 г + шампиньоны 150 г + соевый соус 10 мл']},
+  {label:'Ужин', items:['овощной салат (огурец 100 г, капуста 100 г, зелёный лук 20 г, уксус 5 мл) + креветки или кальмары 200 г + яйцо 1 шт + Cola Zero 150 мл']}
+]},
+{day:26, meals:[
+  {label:'Завтрак', items:['Рис 30 г + креветки 50 г + кукуруза консервированная 50 г']},
+  {label:'Обед', items:['Куриное бедро без кожи 100 г + яичные белки 2 шт.','Салат (огурец 80 г, помидор 100 г, редис 50 г, зелень 20 г, соевый соус 10 мл)']},
+  {label:'Ужин', items:['Бокал вина 150 мл (или йогурт фруктовый 150 мл)','Суши «Филадельфия» 300 г, или рис 55 г (сырой) + рыба из списка 100 г + огурец или авокадо 50 г']}
+]},
+{day:27, meals:[
+  {label:'Завтрак', items:['Булгур 40 г + молоко 2,5% 80 г + яйцо','Салат (помидор, болгарский перец, лук) 150 г','Чернослив 15 г + орехи 15 г']},
+  {label:'Обед', items:['Говядина нежирная 80 г + гречка или рис 30 г','Салат (пекинская капуста 150 г, яблоко 50 г, огурец 100 г, лимонный сок)']},
+  {label:'Ужин', items:['Куриное бедро без кожи 80 г','Салат (пекинская капуста 100 г, огурец 100 г, редис 50 г, зелень 20 г) + оливковое масло 10 г','Хлебцы 30 г + сыр 20 г']}
+]},
+{day:28, meals:[
+  {label:'Завтрак', items:['3 яичных белка + цветная капуста 50 г + рыба из списка 100 г']},
+  {label:'Обед', items:['Куриное бедро без кожи 100 г + салат (огурец 100 г, зелень 50 г, оливки 30 г)','Киви 1 шт.','Coca-Cola Zero 0,33 л']},
+  {label:'Ужин', items:['Креветки или рыба из списка 200 г + винегрет (свёкла 100 г, картофель 50 г, морковь 50 г, солёный огурец 50 г, зелёный горошек 30 г)']}
+]},
+{day:29, tag:'🥗 Винегрет Party 🎉', meals:[
+  {label:'Весь день', items:['Винегрет (свёкла 500 г, картофель 350 г, морковь 180 г, солёный огурец 180 г, зелёный горошек 170 г, подсолнечное масло 20 г)']}
+], note:'Розділити на зручну кількість прийомів їжі протягом дня.'},
+{day:30, meals:[
+  {label:'Завтрак', items:['лаваш 100 г + тунец в собственном соку 70 г + яйцо цельное + зелень','изюм 40 г']},
+  {label:'Обед', items:['макароны тв. сортов 30 г + сыр 30 г','йогурт 200 мл']},
+  {label:'Ужин', items:['овощной салат 300 г','хлебцы 2 шт.']}
+]},
+];
+
+const TOTAL = DAYS.length;
+
+/* ============================================================
+   ЗБЕРЕЖЕННЯ ПОЗИЦІЇ
+   ============================================================ */
+async function loadLastDay(){
+  try{
+    const res = await window.storage.get('lastDay', false);
+    if(res && res.value){
+      const d = parseInt(res.value, 10);
+      if(d>=1 && d<=TOTAL) return d;
+    }
+  }catch(e){ /* ще не збережено */ }
+  return null;
+}
+async function saveLastDay(d){
+  try{ await window.storage.set('lastDay', String(d), false); }catch(e){}
+}
+
+/* ============================================================
+   РЕНДЕР
+   ============================================================ */
+const els = {
+  cover: document.getElementById('cover'),
+  cardView: document.getElementById('card-view'),
+  deck: document.getElementById('deck'),
+  topEyebrow: document.getElementById('top-eyebrow'),
+  topTag: document.getElementById('top-tag'),
+  btnHome: document.getElementById('btn-home'),
+  btnGrid: document.getElementById('btn-grid'),
+  daySheet: document.getElementById('day-sheet'),
+  dayGrid: document.getElementById('day-grid'),
+  coverStart: document.getElementById('cover-start'),
+  coverMetaText: document.getElementById('cover-meta-text'),
+};
+
+let current = 1;
+let lastKnown = null;
+
+function highlightQty(text){
+  return text.replace(/(\d+[.,]?\d*\s?(?:г|кг|мл|л|шт\.?|ст\.?\s?л\.?|ч\.?\s?л\.?|%))/gi, '<span class="qty">$1</span>');
+}
+
+/* ---------- emoji-іконки продуктів, як у вихідному файлі ---------- */
+const MEAL_ICON = {'Завтрак':'🍳','Обед':'🍽️','Ужин':'🌙','Весь день':'🍽️'};
+
+const FOOD_ICONS = [
+  ['винегрет','🥗'],
+  ['белая рыба','🐟'],['красная рыба','🐟'],['рыба','🐟'],['тунец','🐟'],
+  ['креветк','🦐'],['кальмар','🦑'],['мидии','🦪'],
+  ['куриное бедро','🍗'],['бедро куриное','🍗'],
+  ['бедро индейки','🦃'],['филе индейки','🦃'],
+  ['говядина','🥩'],
+  ['яичные белки','🥚'],['яйцо','🥚'],['яйца','🥚'],
+  ['творог','🧀'],['сыр','🧀'],
+  ['кефир','🥛'],['ряженка','🥛'],['йогурт','🥛'],['молоко','🥛'],
+  ['овсянка','🥣'],
+  ['гречка','🌾'],['булгур','🌾'],['киноа','🌾'],
+  ['рис','🍚'],
+  ['макарон','🍝'],
+  ['хлебц','🍞'],['хлеб','🍞'],['лаваш','🫓'],
+  ['авокадо','🥑'],
+  ['банан','🍌'],
+  ['киви','🥝'],
+  ['яблок','🍎'],['груш','🍐'],
+  ['апельсин','🍊'],['мандарин','🍊'],['грейпфрут','🍊'],
+  ['ананас','🍍'],
+  ['изюм','🍇'],['чернослив','🍇'],
+  ['курага','🍑'],
+  ['орех','🌰'],['семечки','🌰'],
+  ['мёд','🍯'],
+  ['оливковое масло','🫒'],['оливки','🫒'],
+  ['подсолнечное масло','🌻'],
+  ['соевый соус','🍶'],
+  ['вин','🍷'],['кофе','☕'],['шоколад','🍫'],
+  ['cola','🥤'],
+  ['морковь','🥕'],
+  ['картофел','🥔'],
+  ['кабачок','🥒'],['огур','🥒'],
+  ['капуст','🥬'],
+  ['помидор','🍅'],
+  ['перец','🫑'],
+  ['брокколи','🥦'],
+  ['кукуруза','🌽'],
+  ['гриб','🍄'],['шампиньон','🍄'],['вешенк','🍄'],
+  ['чеснок','🧄'],
+  ['лук','🧅'],
+  ['укроп','🌿'],['петрушка','🌿'],['зелень','🌿'],
+  ['горошек','🫛'],
+  ['фасоль','🫘'],
+  ['роллы','🍣'],['суши','🍣'],
+  ['мороженое','🍦'],
+  ['салат','🥗'],['овощ','🥗'],
+  ['фрукт','🍓'],
+];
+
+function findIcon(text){
+  const t = text.toLowerCase().replace(/сыр(ой|ая|ое|ых)/g, '');
+  for(const [key, icon] of FOOD_ICONS){
+    if(t.includes(key)) return icon;
+  }
+  return '';
+}
+
+function splitTop(str){
+  const tokens=[], seps=[];
+  let depth=0, buf='';
+  for(const ch of str){
+    if(ch==='(') {depth++; buf+=ch;}
+    else if(ch===')'){depth--; buf+=ch;}
+    else if((ch==='+'||ch===',') && depth===0){ tokens.push(buf); seps.push(ch); buf=''; }
+    else buf+=ch;
+  }
+  tokens.push(buf);
+  return {tokens, seps};
+}
+
+function processToken(tok){
+  tok = tok.trim();
+  if(!tok) return tok;
+  const m = tok.match(/^([^()]*)\(([^()]*)\)(.*)$/);
+  if(m){
+    const name = m[1].trim();
+    const inner = m[2];
+    const tail = m[3].trim();
+    const icon = findIcon(name);
+    const {tokens, seps} = splitTop(inner);
+    const innerOut = tokens.map(processToken).reduce((acc,t,i)=> i===0? t : acc+' '+seps[i-1]+' '+t, '');
+    let out = (icon? `<span class="item-icon">${icon}</span>`:'') + name + ' (' + innerOut + ')';
+    if(tail) out += ' ' + tail;
+    return out;
+  }
+  const icon = findIcon(tok);
+  return (icon? `<span class="item-icon">${icon}</span>`:'') + tok;
+}
+
+function iconizeItem(text){
+  const protectedText = text.replace(/(\d),(\d)/g, '$1\u0001$2');
+  const {tokens, seps} = splitTop(protectedText);
+  const out = tokens.map(processToken).reduce((acc,t,i)=> i===0? t : acc+' '+seps[i-1]+' '+t, '');
+  return out.replace(/\u0001/g, ',');
+}
+
+function buildCard(dayObj){
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  let html = `<div class="card-daynum">${String(dayObj.day).padStart(2,'0')}<span class="slash"> / ${TOTAL}</span></div>`;
+  if(dayObj.tag){
+    html += `<div class="card-special">${dayObj.tag}</div>`;
+  }
+  if(dayObj.note){
+    html += `<div class="card-note">${dayObj.note}</div>`;
+  }
+  html += `<div class="card-divider"></div>`;
+
+  dayObj.meals.forEach((meal, i)=>{
+    const mealIcon = MEAL_ICON[meal.label] || '🍴';
+    html += `<div class="meal">
+      <div class="meal-head">
+        <span class="meal-idx">${mealIcon}</span>
+        <span class="meal-name">${meal.label}</span>
+      </div>
+      <ul class="meal-items">
+        ${meal.items.map(it=>`<li>${highlightQty(iconizeItem(it))}</li>`).join('')}
+      </ul>
+    </div>`;
+  });
+
+  card.innerHTML = html;
+  return card;
+}
+
+function renderDeck(){
+  els.deck.innerHTML = '';
+  const dayObj = DAYS[current-1];
+  els.deck.appendChild(buildCard(dayObj));
+
+  els.topEyebrow.textContent = `ДЕНЬ ${current} / ${TOTAL}`;
+  if(dayObj.tag){
+    els.topTag.style.display = 'inline-block';
+    els.topTag.textContent = dayObj.tag;
+  } else {
+    els.topTag.style.display = 'none';
+  }
+
+  buildDayGrid();
+}
+
+function buildDayGrid(){
+  els.dayGrid.innerHTML = '';
+  DAYS.forEach(d=>{
+    const tile = document.createElement('button');
+    tile.className = 'day-tile';
+    if(d.tag) tile.classList.add('special');
+    if(d.day === current) tile.classList.add('active');
+    tile.textContent = d.day;
+    tile.addEventListener('click', ()=>{
+      goTo(d.day);
+      closeSheet();
+    });
+    els.dayGrid.appendChild(tile);
+  });
+}
+
+function goTo(day){
+  if(day<1 || day>TOTAL) return;
+  current = day;
+  renderDeck();
+  saveLastDay(current);
+}
+
+function showCover(){
+  els.cover.classList.remove('hidden');
+  els.cardView.classList.add('hidden');
+  els.coverStart.textContent = lastKnown ? `Продовжити з дня ${lastKnown}` : 'Почати з дня 1';
+}
+function showCardView(day){
+  current = day;
+  renderDeck();
+  els.cover.classList.add('hidden');
+  els.cardView.classList.remove('hidden');
+}
+
+function openSheet(){ els.daySheet.classList.remove('hidden'); }
+function closeSheet(){ els.daySheet.classList.add('hidden'); }
+
+/* ---------- події ---------- */
+els.btnHome.addEventListener('click', showCover);
+els.btnGrid.addEventListener('click', openSheet);
+els.daySheet.addEventListener('click', (e)=>{ if(e.target===els.daySheet) closeSheet(); });
+els.coverStart.addEventListener('click', ()=>{
+  showCardView(lastKnown || 1);
+});
+
+document.addEventListener('keydown', (e)=>{
+  if(els.cardView.classList.contains('hidden')) return;
+  if(e.key==='ArrowRight') goTo(current+1);
+  if(e.key==='ArrowLeft') goTo(current-1);
+});
+
+/* ---------- свайп ---------- */
+let touchStartX = null, touchStartY = null;
+els.deck.addEventListener('touchstart', (e)=>{
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, {passive:true});
+els.deck.addEventListener('touchend', (e)=>{
+  if(touchStartX===null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.5){
+    if(dx < 0) goTo(current+1); else goTo(current-1);
+  }
+  touchStartX = null; touchStartY = null;
+}, {passive:true});
+
+/* ---------- старт ---------- */
+(async function init(){
+  lastKnown = await loadLastDay();
+  if(lastKnown){
+    showCardView(lastKnown);
+  } else {
+    showCover();
+  }
+})();
+</script>
+</body>
+</html>
