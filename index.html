@@ -546,11 +546,19 @@ async function loadLastDay(){
       const d = parseInt(res.value, 10);
       if(d>=1 && d<=TOTAL) return d;
     }
-  }catch(e){ /* ще не збережено */ }
+  }catch(e){ /* сховище Claude недоступне — спробуємо інший спосіб */ }
+  try{
+    const v = localStorage.getItem('mealplan_lastDay');
+    if(v){
+      const d = parseInt(v, 10);
+      if(d>=1 && d<=TOTAL) return d;
+    }
+  }catch(e){ /* localStorage теж недоступний */ }
   return null;
 }
 async function saveLastDay(d){
   try{ await window.storage.set('lastDay', String(d), false); }catch(e){}
+  try{ localStorage.setItem('mealplan_lastDay', String(d)); }catch(e){}
 }
 
 /* ============================================================
